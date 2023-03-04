@@ -1,25 +1,38 @@
 ﻿script "lib_Camera"
 --> MetaData
 -
-copyright: Anonymous
+copyright: David Bovill
 license: GPLv3
 name: lib_Camera
 type: library
-version: 0.1
+version: 0.2
 
 /*Some help*/
 
 
 --> Working on
 -
-command display_CameraRecordings
-   put camera_ListLocalRecordings() into recordingFiles
-   --
-   display_Data recordingFiles, "Local", "Recordings"
-   put the result into displayView
-   display_SetInteractions displayView, "Camera | Recording", "mDoubleUp_Recording"
-   return displayView
-end display_CameraRecordings
+command camera_CloseAll pCameraNames
+   if pCameraNames is empty then
+      put cameraControls() into pCameraNames
+   end if
+   repeat for each line cameraName in pCameraNames
+      cameraControlDelete cameraName
+   end repeat
+   -- delete variable LocalArray
+end camera_CloseAll
+
+command camera_CloseCloned
+   breakpoint
+   put camera_ConstructStackNameArray() into cameraStackNameArray
+   put cameraStackNameArray ["open"] into openCameraArray
+   repeat for each key sName in openCameraArray
+      put openCameraArray [sName]["cView"] into cView
+      put openCameraArray [sName]["cName"] into cName
+      --
+      set camera_Open of cView to false
+   end repeat
+end camera_CloseCloned
 
 
 --> Camera | Close
@@ -31,18 +44,6 @@ command camera_RevealRecording cameraView
    --
    finder_Reveal mFilePath
 end camera_RevealRecording
-
-command camera_CloseAll
-   put camera_ConstructStackNameArray() into cameraStackNameArray
-   put cameraStackNameArray ["open"] into openCameraArray
-   repeat for each key sName in openCameraArray
-      put openCameraArray [sName]["cView"] into cView
-      put openCameraArray [sName]["cName"] into cName
-      --
-      -- set the camera_Name of cView to empty
-      set camera_Open of cView to false
-   end repeat
-end camera_CloseAll
 
 command camera_ReOpenAll cameraView
    put camera_ConstructStackNameArray() into cameraStackNameArray

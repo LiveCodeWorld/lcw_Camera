@@ -19,10 +19,12 @@ local LocalArray
 --> Menu | Props
 -
 getprop menu_Target [tObject]
+   put the camera_ViewGuess of tObject into cameraView
+   if exists (cameraView) is false then return empty
+   --
    put camera_ListLocalRecordings() into recordingFiles
    put recordingFiles into LocalArray ["recordingFiles"]
    --
-   put the camera_View of tObject into cameraView
    return cameraView
 end menu_Target
 
@@ -85,7 +87,7 @@ on menu_DisplayRecordings
    display_CameraRecordings
 end menu_DisplayRecordings
 
-on _
+private command _
 end _
 
 on menu_StartRecording cameraView
@@ -123,25 +125,8 @@ on menu_StopRecording cameraView
    display_CameraRecordings
 end menu_StopRecording
 
-on _
-end _
-
-on menu_RecordingMetadata cameraView, shortFile
-   put camera_LocalRecordingPath (shortFile, true) into movieFile
-   --
-   put spotlight_ListMovieInfo (movieFile)
-end menu_RecordingMetadata
-
-on menu_DeleteLocalRecording cameraView, shortFile
-   put the long id of control 1 of cd 1 of stack "View|Camera" into cameraView
-   --
-   put the camera_Name of cameraView into cameraName
-   put camera_LocalRecordingPath (shortFile, true) into mFilePath
-   --
-   lcw_Answer "Are you sure you want to delete the local recording '[[shortFile]]'?", cameraView, shortFile
-   --
-   delete file mFilePath
-end menu_DeleteLocalRecording
+private command __
+end __
 
 on menu_UploadRecording cameraView, shortFile
    put camera_LocalRecordingPath (shortFile, true) into mFilePath
@@ -161,31 +146,41 @@ on menu_UploadRecording cameraView, shortFile
    end if
 end menu_UploadRecording
 
+on menu_DeleteLocalRecording cameraView, shortFile
+   put the long id of control 1 of cd 1 of stack "View|Camera" into cameraView
+   --
+   put the camera_Name of cameraView into cameraName
+   put camera_LocalRecordingPath (shortFile, true) into mFilePath
+   --
+   lcw_Answer "Are you sure you want to delete the local recording '[[shortFile]]'?", cameraView, shortFile
+   --
+   delete file mFilePath
+end menu_DeleteLocalRecording
+
+private command _
+end _
+
+on menu_RecordingMetadata cameraView, shortFile
+   put camera_LocalRecordingPath (shortFile, true) into movieFile
+   --
+   put spotlight_ListMovieInfo (movieFile)
+end menu_RecordingMetadata
+
 on menu_RevealRecording cameraView
    camera_RevealRecording cameraView
 end menu_RevealRecording
 
-on _
-end _
-
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
-
-
---> Dev | Menu
--
-on menu_Refresh displayView
+on _Refresh displayView
    put camera_ListLocalRecordings() into recordingFiles
    put recordingFiles into LocalArray ["recordingFiles"]
    --
    set the displayed_Index of displayView to recordingFiles
-end menu_Refresh
+end _Refresh
 
 on _
 end _
 
-on menu_TestOpenProcess displayView
+on _TestOpenProcess displayView
    /*
    put the selected_Line of displayView into shortFile
    put camera_LocalRecordingPath (shortFile, true) into localFile
@@ -196,4 +191,4 @@ on menu_TestOpenProcess displayView
    */
    put camera_GetRecordingFolder() into rFolder
    rsync_OpenProcess rFolder, "david.obeya.xyz"
-end menu_TestOpenProcess
+end _TestOpenProcess

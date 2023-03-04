@@ -12,38 +12,28 @@ version: 0.2
 local LocalArray
 
 getprop menu_Target [tObject]
-   put the camera_View of tObject into cameraView
+   put the camera_ViewGuess of tObject into cameraView
+   --
    if exists (cameraView) then
-      put the camera_DeviceNames of cameraView into deviceNames
+      put the video_DeviceNames of cameraView into deviceNames
       put deviceNames into LocalArray ["deviceNames"]
-      return cameraView
    end if
-   
-   put the display_View of tObject into dView
-   if exists (dView) is false then return dView
-   
-   put the displayed_Object of dView into cameraView
-   if exists (cameraView) then return cameraView
-   
-   return tObject
+   --
+   return cameraView
 end menu_Target
 
-getprop stackColour_Params
+getprop cameraColour_Params
    return "default,-,black,white,red,yellow,green,-,choose"
-end stackColour_Params
+end cameraColour_Params
 
-getprop camera_Param [cameraView]
-   put the camera_DeviceName of cameraView into deviceName
-   return deviceName
-end camera_Param
+getprop video_Param [cameraView]
+   put the video_DeviceName of cameraView into videoDeviceName
+   return videoDeviceName
+end video_Param
 
-getprop testClone_Params
+getprop video_Params [cameraView]
    return LocalArray ["deviceNames"]
-end testClone_Params
-   
-getprop camera_Params [cameraView]
-   return LocalArray ["deviceNames"]
-end camera_Params
+end video_Params
 
 getprop audio_Param [cameraView]
    put the audio_DeviceName of cameraView into deviceName
@@ -64,22 +54,33 @@ getprop shape_Params
    return "rectangle,roundrect,oval,-,hexagon,pentagon,triangle"
 end shape_Params
 
-getprop stackStyle_Param [cameraView]
-   put the stack_Style of cameraView into sStyle
-   return sStyle
-end stackStyle_Param
+getprop checked_Open [cameraView]
+   put the camera_Open of cameraView into sBoolean
+   return sBoolean
+end checked_Open
 
-getprop stackStyle_Params [cameraView]
-   put the stack_Styles of cameraView into sStyles
-   return sStyles
-end stackStyle_Params
+getprop disabled_CloneCamera
+   return exists (stack "View|Camera") is false
+end disabled_CloneCamera
 
 
 --> Global | Camera | Menu
 -
-on menu_Camera cameraView, deviceName
-   set the camera_DeviceName of cameraView to deviceName
-end menu_Camera
+on menu_CameraInit cameraView
+   dispatch "camera_Init" to cameraView
+end menu_CameraInit
+
+on menu_Open cameraView
+   put the camera_Open of cameraView into sBoolean
+   set the camera_Open of cameraView to (sBoolean is false)
+end menu_Open
+
+private command _
+end _
+
+on menu_Video cameraView, deviceName
+   set the video_DeviceName of cameraView to deviceName
+end menu_Video
 
 on menu_Audio cameraView, deviceName
    set the audio_DeviceName of cameraView to deviceName
@@ -93,111 +94,38 @@ on submenu_Close
    return "Global | Camera | Close | Menu"
 end submenu_Close
 
-on _
-end _
+private command __
+end __
 
-on menu_DisplayRecordings
-   display_CameraRecordings
-end menu_DisplayRecordings
+on menu_CameraColour cameraView, colourChoice
+   switch colourChoice
+      case "default"
+         set the backgroundcolor of cameraView to empty
+         break
+      case "Choose"
+         answer color with "white"
+         if it is not empty then
+            set the backgroundcolor of cameraView to it
+         end if
+         break
+      default
+         set the backgroundcolor of cameraView to colourChoice
+   end switch
+end menu_CameraColour
+
+on menu_Shape cameraView, gShape
+   set the graphic_Shape of cameraView to gShape
+end menu_Shape
+
+on menu_EditBehavior cameraView
+   put the behavior of cameraView into bObject
+   edit the script of bObject
+end menu_EditBehavior
+
+on menu_CloneCamera cameraView
+   stack_Clone "View|Camera"
+end menu_CloneCamera
 
 on submenu_Frame
    return "Global | Frame | Menu"
 end submenu_Frame
-
-on menu_StackStyle cameraView, sStyle
-   set the stack_Style of cameraView to sStyle
-end menu_StackStyle
-
-on menu_DeleteAllCameras cameraView
-   dispatch "camera_DeleteAll" to cameraView
-end menu_DeleteAllCameras
-
-on submenu_Dev
-   return "Dev | Menu"
-end submenu_Dev
-
-
---> Dev | Menu
--
-on _TestClone cameraView, deviceName
-   put the camera_DeviceNames of cameraView
-   --
-   display_Camera deviceName
-end _TestClone
-
-on _Shape cameraView, gShape
-   set the graphic_Shape of cameraView to gShape
-end _Shape
-
-on _EditBehavior cameraView
-   put the behavior of cameraView into bObject
-   edit the script of bObject
-end _EditBehavior
-
-on _PresentationMode cameraView
-   put camera_ListStackNames() into sNames
-   put camera_CheckAllFrameless (sNames) is false into toggleBoolean
-   --
-   repeat for each line sName in sNames
-      if exists (control 1 of cd 1 of stack sName) is false then next repeat
-      put the long id of control 1 of cd 1 of stack sName into cameraView
-      --
-      if toggleBoolean is true then
-         set the stack_Frame of cameraView to "frameless"
-      else
-         set the stack_Frame of cameraView to "default"
-      end if
-      --
-      set the systemwindow of stack sName to toggleBoolean
-      set the shadow of stack sName to (not toggleBoolean)
-   end repeat
-end _PresentationMode
-
-on _
-end _
-
-on _DisplayPageTitleArray
-   display_PageTitleArray "vlog.mediagarden.org"
-   put the result into displayView
-   return displayView
-end _DisplayPageTitleArray
-
-on _
-end _
-
-on _StackColour cameraView, colourChoice
-   put the stack_Name of cameraView into stackName
-   --
-   switch colourChoice
-      case "default"
-         set the backgroundcolor of stack stackName to empty
-         break
-      case "Choose"
-         answer color with "black"
-         if it is not empty then
-            set the backgroundcolor of stack stackName to it
-         end if
-         break
-      default
-         set the backgroundcolor of stack stackName to colourChoice
-   end switch
-end _StackColour
-
-on _
-end _
-
-on _OpenCamera cameraView
-   put the stack_Name of cameraView into cameraName
-   set the camera_Name of cameraView to cameraName
-end _OpenCamera
-
-on _Mask cameraView
-   put the snap_Mask of cameraView into someBoolean
-   set the snap_Mask ["blendDstIn"] of cameraView to (not someBoolean)
-end _Mask
-
-getprop checked_Mask [cameraView]
-   put the snap_Mask of cameraView into someBoolean
-   return someBoolean
-end checked_Mask
-
