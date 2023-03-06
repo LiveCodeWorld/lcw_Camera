@@ -89,6 +89,43 @@ end mouseMove
 
 --> Working on
 -
+
+
+--> Geometry
+-
+on resizeControl   
+   put the rect of me into viewRect
+   LayoutControl viewRect
+end resizeControl
+
+command LayoutControl pRect
+   lock screen
+   if pRect is empty then put the rect of me into pRect
+   put the margins of me into someMargin
+   margin_Normalize someMargin, leftM, topM, rightM, bottomM
+   --
+   put pRect into graphicRect
+   rect_SubtractMargins graphicRect, 2
+   --
+   set the camera_Rect of me to graphicRect
+   --
+   set the rect of _graphicObject() to graphicRect
+   set the rect of _ImageObject() to graphicRect
+   --
+   unlock screen
+end LayoutControl
+
+private function _GetMouseOffset
+   put the loc of me into mOffset
+   get the mouseLoc
+   subtract item 1 of it from item 1 of mOffset
+   subtract item 2 of it from item 2 of mOffset
+   return mOffset
+end _GetMouseOffset
+
+
+--> Camera | Close
+-
 command camera_CloseAll pCameraNames
    if pCameraNames is empty then
       put cameraControls() into pCameraNames
@@ -393,37 +430,6 @@ private function audio_ConstructDeviceArray cameraName
    put _ArrayFromTable (audioDeviceTable) into audioDeviceArray
    return audioDeviceArray
 end audio_ConstructDeviceArray
-
-
---> Geometry
--
-on resizeControl   
-   put the rect of me into viewRect
-   LayoutControl viewRect
-end resizeControl
-
-command LayoutControl pRect
-   lock screen
-   if pRect is empty then put the rect of me into pRect
-   put the margins of me into someMargin
-   margin_Normalize someMargin, leftM, topM, rightM, bottomM
-   rect_SubtractMargins pRect, someMargin
-   --
-   set the camera_Rect of me to pRect
-   --
-   set the rect of _graphicObject() to pRect
-   set the rect of _ImageObject() to pRect
-   --
-   unlock screen
-end LayoutControl
-
-private function _GetMouseOffset
-   put the loc of me into mOffset
-   get the mouseLoc
-   subtract item 1 of it from item 1 of mOffset
-   subtract item 2 of it from item 2 of mOffset
-   return mOffset
-end _GetMouseOffset
 
 
 --> Frame
