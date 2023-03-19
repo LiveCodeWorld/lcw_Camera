@@ -117,6 +117,9 @@ on menu_Shape cameraView, gShape
    set the graphic_Shape of cameraView to gShape
 end menu_Shape
 
+private command ___
+end ___
+
 on menu_EditBehavior cameraView
    put the behavior of cameraView into bObject
    edit the script of bObject
