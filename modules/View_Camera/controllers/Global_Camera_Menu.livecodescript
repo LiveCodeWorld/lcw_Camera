@@ -70,13 +70,16 @@ on menu_CameraInit cameraView
    dispatch "camera_Init" to cameraView
 end menu_CameraInit
 
+private on _
+end _
+
 on menu_Open cameraView
    put the camera_Open of cameraView into sBoolean
    set the camera_Open of cameraView to (sBoolean is false)
 end menu_Open
 
-private command _
-end _
+private on __
+end __
 
 on menu_Video cameraView, deviceName
    set the video_DeviceName of cameraView to deviceName
@@ -94,8 +97,8 @@ on submenu_Close
    return "Global | Camera | Close | Menu"
 end submenu_Close
 
-private command __
-end __
+private on ___
+end ___
 
 on menu_CameraColour cameraView, colourChoice
    switch colourChoice
@@ -117,17 +120,30 @@ on menu_Shape cameraView, gShape
    set the graphic_Shape of cameraView to gShape
 end menu_Shape
 
-private command ___
-end ___
+private on ____
+end ____
+
+on menu_CloneCamera cameraView
+   stack_Clone "View|Camera"
+end menu_CloneCamera
+
+on menu_ReplaceWithPlaceholder tObject
+   put the short name of tObject into oName
+   set the control_Type [oName] of tObject to "placeHolder"
+   put the result into newView
+end menu_ReplaceWithPlaceholder
+
+on menu_LayoutControl cameraView
+   dispatch "LayoutControl" to cameraView
+end menu_LayoutControl
+
+private on _____
+end _____
 
 on menu_EditBehavior cameraView
    put the behavior of cameraView into bObject
    edit the script of bObject
 end menu_EditBehavior
-
-on menu_CloneCamera cameraView
-   stack_Clone "View|Camera"
-end menu_CloneCamera
 
 on submenu_Frame
    return "Global | Frame | Menu"

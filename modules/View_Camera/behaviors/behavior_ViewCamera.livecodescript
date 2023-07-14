@@ -99,14 +99,13 @@ on resizeControl
 end resizeControl
 
 command LayoutControl pRect
-   lock screen
    if pRect is empty then put the rect of me into pRect
-   put the margins of me into someMargin
-   margin_Normalize someMargin, leftM, topM, rightM, bottomM
-   --
-   put pRect into graphicRect
-   rect_SubtractMargins graphicRect, 2
-   --
+   -- put the margins of me into someMargin
+   -- margin_Normalize someMargin, leftM, topM, rightM, bottomM
+   -- rect_SubtractMargins graphicRect, someMargin
+   put the inner_Rect [pRect] of me into graphicRect
+   --   
+   lock screen
    set the camera_Rect of me to graphicRect
    --
    set the rect of _graphicObject() to graphicRect
