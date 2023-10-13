@@ -1,7 +1,7 @@
 ﻿script "Global | Camera | Recording | Menu"
 --> MetaData
 -
-copyright: Anonymous
+copyright: David Bovill
 license: GPLv3
 name: Global | Camera | Recording | Menu
 type: controller
@@ -19,7 +19,7 @@ local LocalArray
 --> Menu | Props
 -
 getprop menu_Target [tObject]
-   put the camera_ViewGuess of tObject into cameraView
+   put camera_ViewGuess (tObject) into cameraView
    if exists (cameraView) is false then return empty
    --
    put camera_ListLocalRecordings() into recordingFiles
@@ -28,13 +28,45 @@ getprop menu_Target [tObject]
    return cameraView
 end menu_Target
 
+function camera_ViewGuess tObject
+   ## Camera View?
+   put the camera_View of tObject into cameraView
+   if exists (cameraView) is true then
+      return cameraView
+   end if
+   
+   ## ???
+   put the display_View of tObject into dView
+   if exists (dView) is true then
+      put the title_Text of dView into displayTitle
+      switch displayTitle 
+         case "lcw_Camera"
+         case "View|Camera"
+            break
+         default
+            -- breakpoint
+      end switch
+      put view_GetTemplateObject ("View|Camera") into cameraView
+      return cameraView
+   end if
+   
+   # Another display
+   put the displayed_Object of dView into cameraView
+   put the camera_View of tObject into cameraView
+   if exists (cameraView) is true then
+      return cameraView
+   else
+      return empty
+   end if
+end camera_ViewGuess
+
 command mDouble_UploadRecording
+   breakpoint
    put the params
 end mDouble_UploadRecording
 
 command _AnswerResult theResult
    if theResult is empty then
-      set the recording_Path of cameraView to empty
       answer "Uploaded asset!"
    else
       put the result
@@ -56,7 +88,7 @@ end recordingMetadata_Params
 
 getprop disabled_StartRecording [cameraView]
    if the shiftkey is "Down" then return false
-   put the recording_Path of cameraView into mFilePath
+   put the camera_RecordingPath of cameraView into mFilePath
    if mFilePath is empty then
       return false
    else
@@ -65,13 +97,21 @@ getprop disabled_StartRecording [cameraView]
 end disabled_StartRecording
 
 getprop disabled_StopRecording [cameraView]
-   put the recording_Path of cameraView into mFilePath
+   put the camera_RecordingPath of cameraView into mFilePath
    if mFilePath is empty then
       return true
    else
       return false
    end if
 end disabled_StopRecording
+
+getprop disabled_DeleteLocalRecording [cameraView]
+   return LocalArray ["recordingFiles"] is empty
+end disabled_DeleteLocalRecording
+
+getprop disabled_DisplayRecordings [cameraView]
+   return LocalArray ["recordingFiles"] is empty
+end disabled_DisplayRecordings
 
 on mDoubleUp_Recording fldObject, shortFile
    put camera_LocalRecordingPath (shortFile, true) into mFilePath
@@ -83,10 +123,6 @@ end mDoubleUp_Recording
 
 --> Global | Camera | Recording | Menu
 -
-on menu_DisplayRecordings
-   display_CameraRecordings
-end menu_DisplayRecordings
-
 private command _
 end _
 
@@ -109,7 +145,7 @@ on menu_StartRecording cameraView
    cameraControlDo cameraName, "startRecording", mFilePath
    put the result into someResult
    --
-   set the recording_Path of cameraView to mFilePath
+   set the camera_RecordingPath of cameraView to mFilePath
 end menu_StartRecording
 
 on menu_StopRecording cameraView
@@ -117,10 +153,6 @@ on menu_StopRecording cameraView
    --
    cameraControlDo cameraName, "stopRecording"
    put the result into doResult
-   --
-   put the recording_Path of cameraView into mFilePath
-   --
-   set the recording_Path of cameraView to empty
    -- 
    display_CameraRecordings
 end menu_StopRecording
@@ -128,67 +160,42 @@ end menu_StopRecording
 private command __
 end __
 
-on menu_UploadRecording cameraView, shortFile
-   put camera_LocalRecordingPath (shortFile, true) into mFilePath
+on menu_SetRecordingFolder cameraView
+   camera_SetRecordingFolder
+   put the result into rFolder
+   if rFolder is empty then exit to top
    --
-   set the itemdelimiter to slash
-   put item -1 of mFilePath into shortFile
-   put lcw_Ask ("Choose a title for a wiki page for this recording...", shortFile) into pTitle
-   put lcw_Ask ("Describe this recording...", empty) into pDescription
+   set the uLCW ["recording_Folder"] of cameraView to rFolder
    --
-   atopia_UploadRecording mFilePath, pTitle, pDescription
-   --
-   put the result into wikiURL
-   if theResult is empty then
-      answer "Failed to upload file :("
-   else
-      launch url wikiURL
-   end if
-end menu_UploadRecording
+   display_CameraRecordings
+end menu_SetRecordingFolder
 
 on menu_DeleteLocalRecording cameraView, shortFile
    put the long id of control 1 of cd 1 of stack "View|Camera" into cameraView
    --
-   put the camera_Name of cameraView into cameraName
    put camera_LocalRecordingPath (shortFile, true) into mFilePath
    --
    lcw_Answer "Are you sure you want to delete the local recording '[[shortFile]]'?", cameraView, shortFile
    --
-   delete file mFilePath
+   -- delete file mFilePath
+   revDeleteFile mFilePath
 end menu_DeleteLocalRecording
 
-private command _
-end _
+private command ___
+end ___
 
-on menu_RecordingMetadata cameraView, shortFile
-   put camera_LocalRecordingPath (shortFile, true) into movieFile
+on menu_DisplayRecordings cameraView
+   put the uLCW ["recording_Folder"] of cameraView into rFolder
+   if rFolder is empty then
+      put camera_GetRecordingFolder() into rFolder
+   end if
+   if there is not a folder rFolder then
+      lcw_AnswerWarning "Recording folder does not exist!"
+   end if
    --
-   put spotlight_ListMovieInfo (movieFile)
-end menu_RecordingMetadata
+   display_CameraRecordings rFolder
+end menu_DisplayRecordings
 
-on menu_RevealRecording cameraView
-   camera_RevealRecording cameraView
-end menu_RevealRecording
-
-on _Refresh displayView
-   put camera_ListLocalRecordings() into recordingFiles
-   put recordingFiles into LocalArray ["recordingFiles"]
-   --
-   set the displayed_Index of displayView to recordingFiles
-end _Refresh
-
-on _
-end _
-
-on _TestOpenProcess displayView
-   /*
-   put the selected_Line of displayView into shortFile
-   put camera_LocalRecordingPath (shortFile, true) into localFile
-   set the itemdelimiter to slash
-   put localFile into rFolder
-   put slash into item -1 of rFolder
-   --
-   */
-   put camera_GetRecordingFolder() into rFolder
-   rsync_OpenProcess rFolder, "david.obeya.xyz"
-end _TestOpenProcess
+on submenu_Dev
+   return menu_DevTitle ("Global | Camera | Recording | Menu")
+end submenu_Dev

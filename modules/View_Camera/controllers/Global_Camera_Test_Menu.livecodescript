@@ -34,10 +34,6 @@ on menu_DisplayRecordings
    display_CameraRecordings
 end menu_DisplayRecordings
 
-getprop testClone_Params
-   return LocalArray ["deviceNames"]
-end testClone_Params
-
 on menu_TestClone cameraView, deviceName
    put the camera_DeviceNames of cameraView
    --

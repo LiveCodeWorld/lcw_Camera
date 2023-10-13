@@ -12,8 +12,7 @@ version: 0.2
 local LocalArray
 
 getprop menu_Target [tObject]
-   put the camera_ViewGuess of tObject into cameraView
-   --
+   put camera_ViewGuess (tObject) into cameraView
    if exists (cameraView) then
       put the video_DeviceNames of cameraView into deviceNames
       put deviceNames into LocalArray ["deviceNames"]
@@ -21,6 +20,38 @@ getprop menu_Target [tObject]
    --
    return cameraView
 end menu_Target
+
+function camera_ViewGuess tObject
+   ## Camera View?
+   put the camera_View of tObject into cameraView
+   if exists (cameraView) is true then
+      return cameraView
+   end if
+   
+   ## ???
+   put the display_View of tObject into dView
+   if exists (dView) is true then
+      put the title_Text of dView into displayTitle
+      switch displayTitle 
+         case "lcw_Camera"
+         case "View|Camera"
+            break
+         default
+            -- breakpoint
+      end switch
+      put view_GetTemplateObject ("View|Camera") into cameraView
+      return cameraView
+   end if
+   
+   # Another display
+   put the displayed_Object of dView into cameraView
+   put the camera_View of tObject into cameraView
+   if exists (cameraView) is true then
+      return cameraView
+   else
+      return empty
+   end if
+end camera_ViewGuess
 
 getprop cameraColour_Params
    return "default,-,black,white,red,yellow,green,-,choose"
@@ -97,6 +128,10 @@ on submenu_Close
    return "Global | Camera | Close | Menu"
 end submenu_Close
 
+on submenu_Screen
+   return "Global | Screen | Record | Menu"
+end submenu_Screen
+
 private on ___
 end ___
 
@@ -119,6 +154,18 @@ end menu_CameraColour
 on menu_Shape cameraView, gShape
    set the graphic_Shape of cameraView to gShape
 end menu_Shape
+
+getprop checked_Opaque [cameraView]
+   return the opaque of cameraView is false
+end checked_Opaque
+   
+on menu_Opaque cameraView
+   put the opaque of cameraView into isOpaque
+   set the opaque of cameraView to (isOpaque is false)
+   if isOpaque is false then
+      set the backgroundcolor of cameraView to empty
+   end if
+end menu_Opaque
 
 private on ____
 end ____
@@ -148,3 +195,7 @@ end menu_EditBehavior
 on submenu_Frame
    return "Global | Frame | Menu"
 end submenu_Frame
+
+on submenu_Dev
+   return "Global | Camera | Test | Menu"
+end submenu_Dev

@@ -8,11 +8,18 @@ author: authorName
 version: 0.1
 
 
---> Events
+--> Deps
 -
 getprop project_Deps
-   return "lcw,lcw_Tools,lcw_Authoring,lcw_GIT,lcw_Revigniter,lcw_Script,lcw_Google,lcw_Media,lcw_Chat,lcw_Graph"
+   return "lcw,lcw_Tools,lcw_Authoring"
 end project_Deps
+
+
+--> Custom
+-
+command project_CustomInit
+   go to stack "View|Camera"
+end project_CustomInit
 
 
 --> Events

@@ -100,9 +100,6 @@ end resizeControl
 
 command LayoutControl pRect
    if pRect is empty then put the rect of me into pRect
-   -- put the margins of me into someMargin
-   -- margin_Normalize someMargin, leftM, topM, rightM, bottomM
-   -- rect_SubtractMargins graphicRect, someMargin
    put the inner_Rect [pRect] of me into graphicRect
    --   
    lock screen
@@ -162,18 +159,26 @@ end graphic_Shape
 setprop graphic_Shape gShape
    put _graphicObject() into gObject
    --
+   lock screen
    switch gShape
+      case empty
+         set the style of gObject to rectangle
+         set the linesize of gObject to 0
+         break
       case "hexagon"
          set the style of gObject to regular
          set the polySides of gObject to 6
+         set the linesize of gObject to 1
          break
       case "pentagon"
          set the style of gObject to regular
          set the polySides of gObject to 5
+         set the linesize of gObject to 1
          break
       case "rect"
          set the style of gObject to regular
          set the polySides of gObject to 4
+         set the linesize of gObject to 1
          break 
       case "triangle"
          set the style of gObject to regular
@@ -181,7 +186,9 @@ setprop graphic_Shape gShape
          break 
       default
          set the style of gObject to gShape
+         set the linesize of gObject to 1
    end switch
+   unlock screen
    --
    return gObject
 end graphic_Shape
@@ -196,6 +203,7 @@ on mouseDown pButtonNum
          menu_PopUp "Global | Camera | Menu"
          break
       default
+         -- grab
          -- set the label of _graphicObject() to the params
          -- put _GetMouseOffset() into mOffset
          -- put mOffset into LocalArray ["mOffset"]
@@ -203,26 +211,29 @@ on mouseDown pButtonNum
 end mouseDown
 
 on preOpenControl
-   camera_Init
+   put the camera_Name of me into cameraName
+   camera_Init cameraName
    pass preOpenControl
 end preOpenControl
 
-on camera_Init
-   put the camera_Name of me into cameraName
+on camera_Init pCameraName
+   if pCameraName is empty then
+      put the camera_Name of me into pCameraName
+   end if
    
    ## Open
-   cameraControlCreate cameraName
+   cameraControlCreate pCameraName
    
    ## Load VideoDeviceArray
    _LoadVideoDeviceArray
    put the result into videoDeviceArray
    
    ## Load AudioDeviceArray
-   _LoadAudioDeviceArray cameraName
+   _LoadAudioDeviceArray pCameraName
    
    ## Default video device
    put _DefaultVideoDeviceID (videoDeviceArray) into videoDeviceID
-   cameraControlSet cameraName, "videoDevice", videoDeviceID
+   cameraControlSet pCameraName, "videoDevice", videoDeviceID
    --
    return videoDeviceArray
 end camera_Init
@@ -269,15 +280,23 @@ getprop video_DeviceName
 end video_DeviceName
 
 setprop video_DeviceName videoDeviceName
-   if videoDeviceName is empty then
-      _DeleteCamera
-      put the result into oldCameraName
-      return oldCameraName
-   else
-      put _VideoDeviceIDFromName (videoDeviceName) into videoDeviceID
-      _OpenCamera videoDeviceID
-      return videoDeviceID
-   end if
+   put the camera_Name of me into cameraName
+   set the uLCW ["video_DeviceName"] of me to videoDeviceName
+   --
+   switch videoDeviceName
+      case "Facetime"
+         put _FaceTimeDeviceID() into videoDeviceID
+         _OpenCamera cameraName, videoDeviceID
+         return videoDeviceID
+      case empty
+         _DeleteCamera
+         put the result into oldCameraName
+         return oldCameraName
+      default
+         put _VideoDeviceIDFromName (videoDeviceName) into videoDeviceID
+         _OpenCamera cameraName, videoDeviceID
+         return videoDeviceID
+   end switch
 end video_DeviceName
 
 getprop video_DeviceNames
@@ -311,7 +330,6 @@ end video_DeviceID
 function _VideoDeviceName videoDeviceID
    put _VideoDeviceArray() into videoDeviceArray
    put videoDeviceArray ["id"][videoDeviceID] into videoDeviceName
-   -- put item -1 of videoDeviceName into videoDeviceName -- not sure quick hack
    return videoDeviceName
 end _VideoDeviceName
 
@@ -322,11 +340,32 @@ private function _VideoDeviceID
    return videoDeviceID
 end _VideoDeviceID
 
-private function _VideoDeviceIDFromName pDeviceName, pVideoDeviceArray
-   if pDeviceName is empty then put _DefaultVideoDeviceName() into pDeviceName
+private function _FaceTimeDeviceID pVideoDeviceArray
    if pVideoDeviceArray is not an array then put _VideoDeviceArray() into pVideoDeviceArray
    
-   put pVideoDeviceArray ["name"][pDeviceName] into videoDeviceID
+   put pVideoDeviceArray ["name"] into nameArray
+   repeat for each key sName in nameArray
+      if sName contains "Facetime" then
+         return nameArray [sName]
+      end if
+   end repeat
+   return empty
+end _FaceTimeDeviceID
+
+private function _VideoDeviceIDFromName pDeviceName, pVideoDeviceArray
+   if pVideoDeviceArray is not an array then put _VideoDeviceArray() into pVideoDeviceArray
+   --
+   switch pDeviceName
+      case empty
+         put _DefaultVideoDeviceName() into pDeviceName
+         put pVideoDeviceArray ["name"][pDeviceName] into videoDeviceID
+         break
+      case "FaceTime"
+         put _FaceTimeDeviceID (pVideoDeviceArray) into videoDeviceID
+         break
+      default
+         put pVideoDeviceArray ["name"][pDeviceName] into videoDeviceID
+   end switch
    return videoDeviceID
 end _VideoDeviceIDFromName
 
@@ -339,12 +378,17 @@ getprop camera_Open
    return cameraName is among the lines of cameraNames
 end camera_Open
 
-setprop camera_Open sBoolean
+setprop camera_Open [videoDeviceName] sBoolean
    if sBoolean is true then
-      camera_Init
+      if videoDeviceName is empty then
+         put the uLCW ["video_DeviceName"] of me into videoDeviceName
+      end if
+      -- 
+      put the camera_Name of me into cameraName
+      camera_Init cameraName
       --
-      _OpenCamera
-      put the result into videoDeviceID
+      put _VideoDeviceIDFromName (videoDeviceName) into videoDeviceID
+      _OpenCamera cameraName, videoDeviceID
       return videoDeviceID
    else
       _DeleteCamera
@@ -352,23 +396,21 @@ setprop camera_Open sBoolean
    end if
 end camera_Open
 
+private command _OpenCamera cameraName, videoDeviceID
+   put the rect of _graphicObject() into graphicRect
+   --
+   cameraControlSet cameraName, "videoDevice", videoDeviceID
+   cameraControlSet cameraName, "rect", graphicRect
+   cameraControlSet cameraName, "visible", true
+   --
+   return graphicRect
+end _OpenCamera
+
 private command _DeleteCamera
    put the camera_Name of me into cameraName
    cameraControlDelete cameraName
    return cameraName
 end _DeleteCamera
-
-private command _OpenCamera pVideoDeviceID
-   if pVideoDeviceID is empty then put _VideoDeviceIDFromName() into pVideoDeviceID
-   put the camera_Name of me into cameraName
-   put the rect of _graphicObject() into graphicRect
-   --
-   cameraControlSet cameraName, "videoDevice", pVideoDeviceID
-   cameraControlSet cameraName, "rect", graphicRect
-   cameraControlSet cameraName, "visible", true
-   --
-   return videoDeviceID
-end _OpenCamera
 
 
 --> Load
