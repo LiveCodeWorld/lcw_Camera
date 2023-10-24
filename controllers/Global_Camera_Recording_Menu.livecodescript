@@ -96,7 +96,7 @@ getprop disabled_StartRecording [cameraView]
    end if
 end disabled_StartRecording
 
-getprop disabled_StopRecording [cameraView]
+-- getprop disabled_StopRecording [cameraView]
    put the camera_RecordingPath of cameraView into mFilePath
    if mFilePath is empty then
       return true
@@ -120,9 +120,21 @@ on mDoubleUp_Recording fldObject, shortFile
    finder_Reveal mFilePath
 end mDoubleUp_Recording
 
+getprop activeCamera_Param [cameraView]
+   return the camera_name of cameraView
+end activeCamera_Param
+
+getprop activeCamera_Params
+   return cameraControls()
+end activeCamera_Params
+
 
 --> Global | Camera | Recording | Menu
 -
+on menu_ActiveCamera cameraView, cameraName
+   cameraControlDelete cameraName
+end menu_ActiveCamera
+
 private command _
 end _
 
@@ -160,6 +172,12 @@ end menu_StopRecording
 private command __
 end __
 
+getprop checked_SetRecordingFolder [cameraView]
+   put the uLCW ["recording_Folder"] of cameraView into rFolder
+   put there is a folder rFolder into folderExists
+   return folderExists
+end checked_SetRecordingFolder
+   
 on menu_SetRecordingFolder cameraView
    camera_SetRecordingFolder
    put the result into rFolder

@@ -104,10 +104,10 @@ end menu_CameraInit
 private on _
 end _
 
-on menu_Open cameraView
+on menu_OpenCamera cameraView
    put the camera_Open of cameraView into sBoolean
    set the camera_Open of cameraView to (sBoolean is false)
-end menu_Open
+end menu_OpenCamera
 
 private on __
 end __
