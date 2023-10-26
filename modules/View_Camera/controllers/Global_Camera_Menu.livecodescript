@@ -4,7 +4,7 @@
 license: GPLv3
 name: Global | Camera | Menu
 type: controller
-version: 0.2
+version: 0.4
 
 
 --> Menu | Init
@@ -158,7 +158,7 @@ end menu_Shape
 getprop checked_Opaque [cameraView]
    return the opaque of cameraView is false
 end checked_Opaque
-   
+
 on menu_Opaque cameraView
    put the opaque of cameraView into isOpaque
    set the opaque of cameraView to (isOpaque is false)

@@ -27,6 +27,15 @@ command display_CameraRecordings pDisplayView
    return displayView
 end display_CameraRecordings
 
+function search_FindViews viewGetProp, pStackNames
+   if viewGetProp is empty then put "view_Object" into viewGetProp
+   put stack_ListNames (pStackNames) into stackNames
+   --
+   put search_StackNames (stackNames, "camera_View") into searchData -- searches everything in stack
+   -- put search_StacksForValue (stackNames, "view_Name", "View|Camera") into searchData
+   return keys (searchData)
+end search_FindViews
+
 
 --> Camera | Toggle
 -
