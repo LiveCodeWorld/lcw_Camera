@@ -21,6 +21,10 @@ getprop menu_Target [tObject]
    return cameraView
 end menu_Target
 
+getprop menu_CheckTarget [cameraView]
+   return exists (cameraView)
+end menu_CheckTarget
+
 function camera_ViewGuess tObject
    ## Camera View?
    put the camera_View of tObject into cameraView
@@ -85,10 +89,10 @@ getprop shape_Params
    return "rectangle,roundrect,oval,-,hexagon,pentagon,triangle"
 end shape_Params
 
-getprop checked_Open [cameraView]
+getprop checked_OpenCamera [cameraView]
    put the camera_Open of cameraView into sBoolean
    return sBoolean
-end checked_Open
+end checked_OpenCamera
 
 getprop disabled_CloneCamera
    return exists (stack "View|Camera") is false
@@ -101,16 +105,24 @@ on menu_CameraInit cameraView
    dispatch "camera_Init" to cameraView
 end menu_CameraInit
 
+on menu_Inspect cameraView
+   display_ObjectProperties cameraView
+end menu_Inspect
+
 private on _
 end _
+
+on submenu_MenuGroup
+   return menu_CreateTitle ("Global | Menu | Group | Menu")
+end submenu_MenuGroup
+
+private on __
+end __
 
 on menu_OpenCamera cameraView
    put the camera_Open of cameraView into sBoolean
    set the camera_Open of cameraView to (sBoolean is false)
 end menu_OpenCamera
-
-private on __
-end __
 
 on menu_Video cameraView, deviceName
    set the video_DeviceName of cameraView to deviceName
