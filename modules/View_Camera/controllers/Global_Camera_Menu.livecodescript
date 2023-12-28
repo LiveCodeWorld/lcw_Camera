@@ -112,9 +112,9 @@ end menu_Inspect
 private on _
 end _
 
-on submenu_MenuGroup
-   return menu_CreateTitle ("Global | Menu | Group | Menu")
-end submenu_MenuGroup
+on submenu_CameraMenu
+   return menu_CreateTitle ("Global | Menu | Camera | Menu")
+end submenu_CameraMenu
 
 private on __
 end __
@@ -132,7 +132,7 @@ on menu_Audio cameraView, deviceName
    set the audio_DeviceName of cameraView to deviceName
 end menu_Audio
 
-on submenu_Record
+-- on submenu_Record
    return "Global | Camera | Recording | Menu"
 end submenu_Record
 
@@ -140,7 +140,7 @@ on submenu_Close
    return "Global | Camera | Close | Menu"
 end submenu_Close
 
-on submenu_Screen
+-- on submenu_Screen
    return "Global | Screen | Record | Menu"
 end submenu_Screen
 

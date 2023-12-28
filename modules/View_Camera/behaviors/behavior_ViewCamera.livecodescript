@@ -90,23 +90,23 @@ end mouseMove
 --> Working on
 -
 getprop camera_MenuGroupData
-   put the menu_Group of me into mGroup
+   put the menubar_View of me into mGroup
    if exists (mGroup) is false then return empty
    --
    put the menu_GroupData of mGroup into mGroupData
    return mGroupData
 end camera_MenuGroupData
 
-getprop menu_Group
-   put the menu_Group of me into mGroup
+getprop menubar_View
+   put the menubar_View of me into mGroup
    if exists (mGroup) is false then return empty
    return mGroup
-end menu_Group
+end menubar_View
 
-setprop menu_Group mGroup
+setprop menubar_View mGroup
    if exists (mGroup) is false then return empty
-   set the menu_Group of me to mGroup
-end menu_Group
+   set the menubar_View of me to mGroup
+end menubar_View
 
 getprop menu_IsGlobal
    return the menu_IsGlobal of me is not false
@@ -117,13 +117,13 @@ setprop menu_IsGlobal isGlobal
 end menu_IsGlobal
 
 getprop menu_BarName
-   if exists (the menu_Group of me) is false then return empty
+   if exists (the menubar_View of me) is false then return empty
    put the stack_Name of me into sName
    return the menubar of stack sName
 end menu_BarName
 
 setprop menu_IsActive sBoolean   
-   put the menu_Group of me into mGroup
+   put the menubar_View of me into mGroup
    if exists (mGroup) is false then return empty
    
    # Props
@@ -163,7 +163,6 @@ command LayoutControl pRect
    --
    set the rect of _graphicObject() to graphicRect
    set the rect of _ImageObject() to graphicRect
-   -- set the rect of the menu_Group of me to graphicRect
    --
    unlock screen
 end LayoutControl
