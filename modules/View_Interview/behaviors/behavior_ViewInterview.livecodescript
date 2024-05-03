@@ -64,6 +64,7 @@ setprop rectArray_AnimateScaled [pScaleProportionally] indexOrName
    
    ## Animate Views
    put rectArray ["views"] into viewData
+   put "animationEngine" is among the lines of the stacksinuse into aeOn
    repeat for each key cNum in viewData
       put viewData [cNum]["control"] into tView
       put viewData [cNum]["rect"] into oViewRect
@@ -71,7 +72,12 @@ setprop rectArray_AnimateScaled [pScaleProportionally] indexOrName
       put rect_TransformFromOrigin (oViewRect, oFrameRect, tFrameRect, pScaleProportionally) into sRect
       rect_Normalise sRect -- for animationEngine
       --
-      aeChangeRect tView, sRect, 1000, "inOut"
+      if aeOn is true then
+         aeChangeRect tView, sRect, 1000, "inOut"
+      else
+         set the rect of tView to sRect
+      end if
+      
    end repeat
    
    ## Animate Controls

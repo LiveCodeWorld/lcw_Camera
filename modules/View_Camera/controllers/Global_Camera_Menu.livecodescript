@@ -113,7 +113,7 @@ private on _
 end _
 
 on submenu_CameraMenu
-   return menu_CreateTitle ("Global | Menu | Camera | Menu")
+   return "Global | Menu | Camera | Menu"
 end submenu_CameraMenu
 
 private on __

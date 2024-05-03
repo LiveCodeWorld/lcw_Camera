@@ -89,6 +89,84 @@ end mouseMove
 
 --> Working on
 -
+
+--> Events
+-
+on mouseUp
+   set the camera_Rect of me to the rect of me
+end mouseUp
+
+on mouseDown pButtonNum
+   switch pButtonNum
+      case 3
+         -- put empty into LocalArray ["mOffset"]
+         menu_PopUp "Global | Camera | Menu"
+         break
+      default
+         -- grab
+         -- set the label of _graphicObject() to the params
+         -- put _GetMouseOffset() into mOffset
+         -- put mOffset into LocalArray ["mOffset"]
+   end switch
+end mouseDown
+
+on preOpenControl
+   put the camera_Name of me into cameraName
+   camera_Init cameraName
+   pass preOpenControl
+end preOpenControl
+
+on camera_Init pCameraName
+   if pCameraName is empty then
+      put the camera_Name of me into pCameraName
+   end if
+   
+   ## Open
+   cameraControlCreate pCameraName
+   
+   ## Load VideoDeviceArray
+   _LoadVideoDeviceArray
+   put the result into videoDeviceArray
+   
+   ## Load AudioDeviceArray
+   _LoadAudioDeviceArray pCameraName
+   
+   ## Default video device
+   put _DefaultVideoDeviceID (videoDeviceArray) into videoDeviceID
+   cameraControlSet pCameraName, "videoDevice", videoDeviceID
+   --
+   return videoDeviceArray
+end camera_Init
+
+on resizeControl   
+   put the rect of me into viewRect
+   LayoutControl viewRect
+end resizeControl
+
+command LayoutControl pRect
+   if pRect is empty then put the rect of me into pRect
+   put the inner_Rect [pRect] of me into graphicRect
+   --   
+   lock screen
+   set the camera_Rect of me to graphicRect
+   --
+   set the rect of _graphicObject() to graphicRect
+   set the rect of _ImageObject() to graphicRect
+   --
+   unlock screen
+end LayoutControl
+
+private function _GetMouseOffset
+   put the loc of me into mOffset
+   get the mouseLoc
+   subtract item 1 of it from item 1 of mOffset
+   subtract item 2 of it from item 2 of mOffset
+   return mOffset
+end _GetMouseOffset
+
+
+--> MenuBar
+-
 getprop camera_MenuGroupData
    put the menubar_View of me into mGroup
    if exists (mGroup) is false then return empty
@@ -145,35 +223,6 @@ getprop menu_IsActive
    put the menu_BarName of me into mName
    return mName is not empty
 end menu_IsActive
-
-
---> Geometry
--
-on resizeControl   
-   put the rect of me into viewRect
-   LayoutControl viewRect
-end resizeControl
-
-command LayoutControl pRect
-   if pRect is empty then put the rect of me into pRect
-   put the inner_Rect [pRect] of me into graphicRect
-   --   
-   lock screen
-   set the camera_Rect of me to graphicRect
-   --
-   set the rect of _graphicObject() to graphicRect
-   set the rect of _ImageObject() to graphicRect
-   --
-   unlock screen
-end LayoutControl
-
-private function _GetMouseOffset
-   put the loc of me into mOffset
-   get the mouseLoc
-   subtract item 1 of it from item 1 of mOffset
-   subtract item 2 of it from item 2 of mOffset
-   return mOffset
-end _GetMouseOffset
 
 
 --> Camera | Close
@@ -250,51 +299,6 @@ setprop graphic_Shape gShape
 end graphic_Shape
 
 
---> Load
--
-on mouseDown pButtonNum
-   switch pButtonNum
-      case 3
-         -- put empty into LocalArray ["mOffset"]
-         menu_PopUp "Global | Camera | Menu"
-         break
-      default
-         -- grab
-         -- set the label of _graphicObject() to the params
-         -- put _GetMouseOffset() into mOffset
-         -- put mOffset into LocalArray ["mOffset"]
-   end switch
-end mouseDown
-
-on preOpenControl
-   put the camera_Name of me into cameraName
-   camera_Init cameraName
-   pass preOpenControl
-end preOpenControl
-
-on camera_Init pCameraName
-   if pCameraName is empty then
-      put the camera_Name of me into pCameraName
-   end if
-   
-   ## Open
-   cameraControlCreate pCameraName
-   
-   ## Load VideoDeviceArray
-   _LoadVideoDeviceArray
-   put the result into videoDeviceArray
-   
-   ## Load AudioDeviceArray
-   _LoadAudioDeviceArray pCameraName
-   
-   ## Default video device
-   put _DefaultVideoDeviceID (videoDeviceArray) into videoDeviceID
-   cameraControlSet pCameraName, "videoDevice", videoDeviceID
-   --
-   return videoDeviceArray
-end camera_Init
-
-
 --> Camera | Geometry
 -
 getprop camera_Rect
@@ -308,6 +312,12 @@ end camera_Rect
 setprop camera_Rect someRect
    put the camera_Name of me into cameraName
    if cameraName is empty then return empty
+   
+   if the menu_IsActive of me is true then
+      put 20 into mHeight
+      subtract mHeight from item 2 of someRect
+      subtract mHeight from item 4 of someRect
+   end if
    
    cameraControlSet cameraName, "rect", someRect
    return the result

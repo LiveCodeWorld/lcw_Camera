@@ -82,7 +82,7 @@ end camera_LocalRecordingPath
 
 function camera_ListLocalRecordings
    put camera_GetRecordingFolder (false) into rFolder
-   put folder_ListShortFiles (rFolder) into rFiles
+   put file_ListShort (rFolder) into rFiles
    --
    sort rFiles
    if rFiles contains "_" then
