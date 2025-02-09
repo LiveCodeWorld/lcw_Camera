@@ -199,10 +199,23 @@ end menu_LayoutControl
 private on _____
 end _____
 
-on menu_EditBehavior cameraView
-   put the behavior of cameraView into bObject
-   edit the script of bObject
-end menu_EditBehavior
+on menu_BottomRight cameraView
+   put the stack_Name of cameraView into sName
+   --
+   put screen_BottomRight() into cRect
+   --
+   put the camera_Name of cameraView into cameraName
+   cameraControlSet cameraName, "rect", cRect
+   --
+   if the shiftKey is "Up" then
+      set the rect of stack sName to cRect
+   end if
+end menu_BottomRight
+
+on menu_Test cameraView
+   put the video_DeviceNames of cameraView into deviceNames
+   put deviceNames
+end menu_Test
 
 on submenu_Frame
    return "Global | Frame | Menu"

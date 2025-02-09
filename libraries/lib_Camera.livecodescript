@@ -12,20 +12,23 @@ version: 0.2
 
 --> Working on
 -
-command camera_ToggleRecord
+command camera_LoadAndSet cameraName, pVideoDeviceID, pAudioDeviceID
+   ## Load DeviceArrays
+   put camera_VideoDeviceArray (cameraName) into videoDeviceArray
+   put camera_AudioDeviceArray (cameraName) into audioDeviceArray
    
-end camera_ToggleRecord
-
-function record_GetCameraName
-   put record_GetSettingsArray() into sArray
+   ## Set video device
+   if pVideoDeviceID is empty then
+      put camera_DefaultVideoDeviceID (videoDeviceArray) into pVideoDeviceID
+   end if
+   cameraControlSet pCameraName, "videoDevice", videoDeviceID
    
-end record_GetCameraName
-
-function record_GetSettingsArray
-   global gLCW
-   --
-   return gLCW ["temp"]["Record"]
-end record_GetSettingsArray
+   ## Set audio device
+   if pAudioDeviceID is empty then
+      put _DefaultAudioDeviceID (audioDeviceArray) into pAudioDeviceID
+   end if
+   cameraControlSet pCameraName, "videoDevice", videoDeviceID   
+end camera_LoadAndSet
 
 
 --> Props
@@ -70,6 +73,102 @@ setprop camera_RecordingFolder [pCreate] rFolder
    end if
    return false
 end camera_RecordingFolder
+
+
+--> Camera
+-
+function camera_ListNames
+   return cameraControls()
+end camera_ListNames
+
+
+--> Camera | Hack
+-
+function camera_DefaultAudioDeviceID audioDeviceArray
+   put camera_DefaultAudioDeviceName() into deviceName
+   put audioDeviceArray ["name"][deviceName] into audioDeviceID
+   return audioDeviceID
+end camera_DefaultAudioDeviceID
+
+function camera_DefaultVideoDeviceID videoDeviceArray
+   put camera_DefaultVideoDeviceName() into deviceName
+   put videoDeviceArray ["name"][deviceName] into videoDeviceID
+   return videoDeviceID
+end camera_DefaultVideoDeviceID
+
+function camera_DefaultAudioDeviceName pCameraName, pFilter
+   -- return "MacBook Air Microphone"
+   if pFilter is empty then put "MacBook *" into pFilter
+   --
+   put camera_ListAudioDeviceNames (pCameraName) into audioDeviceNames
+   if item 1 of audioDeviceNames = "Error" then return empty
+   
+   get audioDeviceNames
+   filter it with pFilter
+   if it is empty then
+      put line 1 of audioDeviceNames into defaultDeviceName
+   else
+      put line 1 of it into defaultDeviceName
+   end if
+   return defaultDeviceName
+end camera_DefaultAudioDeviceName
+
+function camera_DefaultVideoDeviceName pCameraName, pFilter
+   -- return "FaceTime HD Camera"
+   if pFilter is empty then put "FaceTime *" into pFilter
+   --
+   put camera_ListVideoDeviceNames (pCameraName) into cameraDeviceNames
+   if item 1 of cameraDeviceNames = "Error" then return empty
+   
+   get cameraDeviceNames
+   filter it with pFilter
+   if it is empty then
+      put line 1 of cameraDeviceNames into defaultDeviceName
+   else
+      put line 1 of it into defaultDeviceName
+   end if
+   return defaultDeviceName
+end camera_DefaultVideoDeviceName
+
+function camera_ListVideoDeviceNames pCameraName
+   if pCameraName is empty then
+      put line 1 of camera_ListNames() into pCameraName
+      if pCameraName is empty then
+         return "Error, no camera is open."
+      end if
+   end if
+   put camera_VideoDeviceArray (pCameraName) into videoDeviceArray
+   --
+   put videoDeviceArray ["name"] into nameArray
+   put keys (nameArray) into videoDeviceNames
+   return videoDeviceNames
+end camera_ListVideoDeviceNames
+
+function camera_VideoDeviceArray cameraName
+   put cameraControlGet (cameraName, "videoDevices") into videoDeviceTable
+   put _ArrayFromTable (videoDeviceTable) into videoDeviceArray   
+   return videoDeviceArray
+end camera_VideoDeviceArray
+
+function camera_ListAudioDeviceNames pCameraName
+   if pCameraName is empty then
+      put line 1 of camera_ListNames() into pCameraName
+      if pCameraName is empty then
+         return "Error, no camera is open."
+      end if
+   end if
+   put camera_AudioDeviceArray (pCameraName) into audioDeviceArray
+   --
+   put audioDeviceArray ["name"] into nameArray
+   put keys (nameArray) into audioDeviceNames
+   return audioDeviceNames
+end camera_ListAudioDeviceNames
+
+function camera_AudioDeviceArray cameraName
+   put cameraControlGet (cameraName, "audioDevices") into audioDeviceTable
+   put _ArrayFromTable (audioDeviceTable) into audioDeviceArray
+   return audioDeviceArray
+end camera_AudioDeviceArray
 
 
 --> Camera | Files
@@ -117,40 +216,6 @@ command camera_SetRecordingFolder pFolder
    pref_SetValue "Camera Recording Folder", pFolder
    return pFolder
 end camera_SetRecordingFolder
-
---> Camera | What
--
-function record_GetWhat
-   global gLCW
-   put gLCW ["temp"]["Record"]["What"] into recordWhat
-   return recordWhat
-end record_GetWhat
-
-command record_SetWhat recordWhat, pCameraView, pRecordPath
-   global gLCW
-   if recordWhat is empty then put "Screen" into recordWhat
-   --
-   switch recordWhat
-      case "Camera"
-         put pCameraView into gLCW ["temp"]["Record"]["Camera"]["View"]
-         --
-         put the camera_Name of pCameraView into cameraName
-         put cameraName into gLCW ["temp"]["Record"]["Camera"]["camera_Name"]
-         put mFilePath into gLCW ["temp"]["Record"]["Camera"]["recording_Path"]
-         --
-         if exists (pCameraView) then
-            set the camera_RecordingPath of pCameraView to mFilePath
-         end if
-         break
-      case "Screen"
-         put empty into gLCW ["temp"]["Record"]["Screen"]
-         delete variable gLCW ["temp"]["Record"]["Camera"]
-      default
-         put empty into gLCW ["temp"]["Record"][recordWhat]
-         delete variable gLCW ["temp"]["Record"]["Camera"]
-   end switch
-   return record_GetSettingsArray()
-end record_SetWhat
 
 
 --> Camera | Record
@@ -281,3 +346,19 @@ function camera_ConstructStackNameArray
    end repeat
    return cameraStackNameArray
 end camera_ConstructStackNameArray
+
+
+--> Private
+-
+private function _ArrayFromTable deviceTable
+   put deviceTable into idArray
+   split idArray by CR and comma
+   put idArray into deviceArray ["id"]
+   
+   repeat for each line someLine in deviceTable
+      put item 1 to -2  of someLine into deviceID
+      put item -1 of someLine into deviceName
+      put deviceID into deviceArray ["name"][deviceName]
+   end repeat
+   return deviceArray
+end _ArrayFromTable

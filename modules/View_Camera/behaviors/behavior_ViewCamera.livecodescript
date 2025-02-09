@@ -16,79 +16,22 @@ put the result -- into url ("file:" & specialFolderPath("documents") & "/snapsho
 local LocalArray
 
 /*
---> Events
--
-on dragDrop
-   put the keys of the dragData into dropKeys
-   put the dragData ["text"] into droppedURL
-   --
-   put the dragData ["html"] into droppedHTML
-   put "<p><a href='(.+\.html)'>.+</a></p>" into wikiHtmlURlReg
-   replace "'" with quote in wikiHtmlURlReg
-   --
-   switch
-      case "image" is among the lines of dropKeys
-         put the dragData ["image"] into imageContents
-         put "image" & CR & line 1 of imageContents
-         break
-      case droppedURL begins with "https://www.bbc.co.uk/iplayer/episode/"
-         -- case matchtext (droppedURL, "https://www.bbc.co.uk/iplayer/episode/(.+)")
-         put droppedURL
-         break
-      case droppedURL begins with "https://www.youtube.com/watch?v="
-      case matchText (droppedURL, "https://www.youtube.com/watch?v=(.+)", tubeID)
-         put droppedURL
-         break
-      case matchText (droppedURL, "https://vimeo.com/(.+)", vimeoID)
-      case matchText (droppedURL, "https://vimeo.com/channels/staffpicks/(.+)", vimeoID)
-         put droppedURL
-         break
-      case matchText (droppedHTML, wikiHtmlURlReg, wikiHtmlURl)
-         put droppedHTML
-         break
-      default
-         -- do nothing
-         answer warning "I don't recognise this url!"
-         put droppedURL
-         break
-      default
-         put dropKeys
-   end switch
-   pass dragDrop
-end dragDrop
-
-on dragEnter
-   set the allowableDragActions to "link"
-   set the dragAction to "Link"
-   pass dragEnter
-end dragEnter
-
-on mouseEnter
-   focus on me
-   pass mouseEnter
-end mouseEnter
-
-on mouseMove
-   if the mouse is not "down" then pass mouseMove
-   
-   put the stack_Name of me into stackName
-   put LocalArray ["mOffset"] into mOffset
-   if mOffset is empty then pass mouseMove
-   
-   put the globalloc of the mouseloc into newLoc
-   --
-   add item 1 of mOffset to item 1 of newLoc
-   add item 2 of mOffset to item 2 of newLoc
-   --
-   set the loc of stack stackName to newLoc
-   --
-   pass mouseMove
-end mouseMove
 */
 
 
 --> Working on
 -
+-- getprop menubar_View
+   put the menubar_View of me into mGroup
+   if exists (mGroup) is false then return empty
+   return mGroup
+end menubar_View
+
+-- setprop menubar_View mGroup
+   if exists (mGroup) is false then return empty
+   set the menubar_View of me to mGroup
+end menubar_View
+
 
 --> Events
 -
@@ -174,17 +117,6 @@ getprop camera_MenuGroupData
    put the menu_GroupData of mGroup into mGroupData
    return mGroupData
 end camera_MenuGroupData
-
-getprop menubar_View
-   put the menubar_View of me into mGroup
-   if exists (mGroup) is false then return empty
-   return mGroup
-end menubar_View
-
-setprop menubar_View mGroup
-   if exists (mGroup) is false then return empty
-   set the menubar_View of me to mGroup
-end menubar_View
 
 getprop menu_IsGlobal
    return the menu_IsGlobal of me is not false
@@ -527,16 +459,16 @@ private function _ConstructVideoDeviceArray
 end _ConstructVideoDeviceArray
 
 private command _LoadAudioDeviceArray cameraName
-   put audio_ConstructDeviceArray (cameraName) into audioDeviceArray
+   put camera_AudioDeviceArray (cameraName) into audioDeviceArray
    put audioDeviceArray into LocalArray ["audioDeviceArray"]
    return audioDeviceArray
 end _LoadAudioDeviceArray
 
-private function audio_ConstructDeviceArray cameraName
+private function camera_AudioDeviceArray cameraName
    put cameraControlGet (cameraName, "audioDevices") into audioDeviceTable
    put _ArrayFromTable (audioDeviceTable) into audioDeviceArray
    return audioDeviceArray
-end audio_ConstructDeviceArray
+end camera_AudioDeviceArray
 
 
 --> Frame
@@ -663,7 +595,7 @@ private function png_IsTransparent pImageFile
 end png_IsTransparent
 
 private function audio_ListDeviceNames cameraName
-   put audio_ConstructDeviceArray (cameraName) into audioDeviceArray
+   put camera_AudioDeviceArray (cameraName) into audioDeviceArray
    put audioDeviceArray into LocalArray ["audioDeviceArray"]
    --
    put audioDeviceArray ["name"] into nameArray

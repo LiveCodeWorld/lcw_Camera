@@ -17,6 +17,94 @@ local LocalArray
 
 --> Working on
 -
+getprop camera_Open
+   put the camera_DefaultName of the target into cameraName
+   --
+   put cameraControls() into cameraNames
+   return cameraName is among the lines of cameraNames
+end camera_Open
+
+setprop camera_Video [pRect] videoDeviceName
+   put the long id of the target into tObject
+   if pRect is empty then put the rect of tObject into pRect
+   
+   # Create camera if needed
+   put the camera_DefaultName of tObject into cameraName
+   if cameraName is not among the lines of cameraControls() then
+      cameraControlCreate cameraName 
+   end if
+   
+   # Set camera props
+   put camera_VideoDeviceID (videoDeviceName) into videoDeviceID
+   --
+   cameraControlSet cameraName, "videoDevice", videoDeviceID
+   cameraControlSet cameraName, "rect", pRect
+   cameraControlSet cameraName, "visible", true
+   --
+   return videoDeviceID
+end camera_Video
+
+function camera_VideoDeviceID pDeviceName, pVideoDeviceArray
+   if pVideoDeviceArray is not an array then put _VideoDeviceArray() into pVideoDeviceArray
+   --
+   switch pDeviceName
+      case empty
+         put _DefaultVideoDeviceName() into pDeviceName
+         put pVideoDeviceArray ["name"][pDeviceName] into videoDeviceID
+         break
+      case "FaceTime"
+         put _FaceTimeDeviceID (pVideoDeviceArray) into videoDeviceID
+         break
+      default
+         put pVideoDeviceArray ["name"][pDeviceName] into videoDeviceID
+   end switch
+   return videoDeviceID
+end camera_VideoDeviceID
+
+setprop camera_Visible sBoolean
+   set the camera_Property ["visible"] of the target to sBoolean
+   return the result
+end camera_Visible
+
+setprop camera_Property [propName] propValue
+   put the camera_Name of the target into cameraName
+   --
+   cameraControlSet cameraName, propName, propValue
+   return the result
+end camera_Property
+
+getprop camera_Name
+   put the camera_DefaultName of the target into cameraName
+   if cameraName is among the lines of cameraControls() then
+      return cameraName
+   else
+      return empty
+   end if
+end camera_Name
+
+getprop camera_DefaultName
+   put the long id of the target into tObject
+   --
+   put the short id of tObject into myID
+   put the stack_Name of tObject into stackName
+   put stackName && myID into cameraName
+   --
+   cameraControlCreate cameraName
+   return cameraName
+end camera_DefaultName
+
+
+--> Display
+-
+command display_Camera cameraDeviceName, sRect
+   display_Clone "View|Camera", "Camera", cameraDeviceName, "camera_DeviceName", sRect
+   put the result into displayView
+   return displayView
+end display_Camera
+
+
+--> Camera | Recording
+-
 command display_CameraRecordings pDisplayView
    put camera_ListLocalRecordings() into recordingFiles
    --
