@@ -18,6 +18,8 @@ local LocalArray
 --> Menu | Props
 -
 getprop menu_Target [tObject]
+   put camera_ListNames() into LocalArray ["cameraNames"]
+   --
    put the camera_View of tObject into cameraView
    if exists (cameraView) is false then
       put the display_View of tObject into dView
@@ -28,7 +30,6 @@ getprop menu_Target [tObject]
       if exists (cameraView) is false then return empty
    end if
    
-   put camera_ListNames() into LocalArray ["cameraNames"]
    return cameraView
 end menu_Target
 

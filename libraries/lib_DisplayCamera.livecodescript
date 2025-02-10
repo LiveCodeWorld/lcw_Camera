@@ -30,12 +30,20 @@ setprop camera_Video [pRect] videoDeviceName
    
    # Create camera if needed
    put the camera_DefaultName of tObject into cameraName
-   if cameraName is not among the lines of cameraControls() then
+   --
+   put cameraControls() into cameraNames
+   if cameraName is among the lines of cameraNames then
+      if videoDeviceName is empty then
+         cameraControlDelete cameraName
+         return empty
+      end if
+   else
       cameraControlCreate cameraName 
    end if
    
    # Set camera props
-   put camera_VideoDeviceID (videoDeviceName) into videoDeviceID
+   put camera_VideoDeviceArray (cameraName) into videoDeviceArray
+   put camera_VideoDeviceID (videoDeviceName, videoDeviceArray) into videoDeviceID
    --
    cameraControlSet cameraName, "videoDevice", videoDeviceID
    cameraControlSet cameraName, "rect", pRect
@@ -43,23 +51,6 @@ setprop camera_Video [pRect] videoDeviceName
    --
    return videoDeviceID
 end camera_Video
-
-function camera_VideoDeviceID pDeviceName, pVideoDeviceArray
-   if pVideoDeviceArray is not an array then put _VideoDeviceArray() into pVideoDeviceArray
-   --
-   switch pDeviceName
-      case empty
-         put _DefaultVideoDeviceName() into pDeviceName
-         put pVideoDeviceArray ["name"][pDeviceName] into videoDeviceID
-         break
-      case "FaceTime"
-         put _FaceTimeDeviceID (pVideoDeviceArray) into videoDeviceID
-         break
-      default
-         put pVideoDeviceArray ["name"][pDeviceName] into videoDeviceID
-   end switch
-   return videoDeviceID
-end camera_VideoDeviceID
 
 setprop camera_Visible sBoolean
    set the camera_Property ["visible"] of the target to sBoolean

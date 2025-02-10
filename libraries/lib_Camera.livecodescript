@@ -144,6 +144,36 @@ function camera_ListVideoDeviceNames pCameraName
    return videoDeviceNames
 end camera_ListVideoDeviceNames
 
+function camera_VideoDeviceID videoDeviceName, videoDeviceArray
+   switch videoDeviceName
+      case empty
+         put _DefaultVideoDeviceName() into videoDeviceName
+         put videoDeviceArray ["name"][videoDeviceName] into videoDeviceID
+         break
+      case "FaceTime"
+         put camera_FindDeviceID (videoDeviceArray) into videoDeviceID
+         break
+      default
+         put videoDeviceArray ["name"][videoDeviceName] into videoDeviceID
+         if videoDeviceID is empty then
+            put camera_FindDeviceID (videoDeviceArray, videoDeviceName) into videoDeviceID
+         end if
+   end switch
+   return videoDeviceID
+end camera_VideoDeviceID
+
+function camera_FindDeviceID videoDeviceArray, pNameKey
+   if pNameKey is empty then put "Facetime" into pNameKey
+   --
+   put videoDeviceArray ["name"] into nameArray
+   repeat for each key sName in nameArray
+      if sName contains pNameKey then
+         return nameArray [sName]
+      end if
+   end repeat
+   return empty
+end camera_FindDeviceID
+
 function camera_VideoDeviceArray cameraName
    put cameraControlGet (cameraName, "videoDevices") into videoDeviceTable
    put _ArrayFromTable (videoDeviceTable) into videoDeviceArray   

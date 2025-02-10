@@ -204,8 +204,9 @@ on menu_BottomRight cameraView
    --
    put screen_BottomRight() into cRect
    --
-   put the camera_Name of cameraView into cameraName
-   cameraControlSet cameraName, "rect", cRect
+   -- put the camera_Name of cameraView into cameraName
+   -- cameraControlSet cameraName, "rect", cRect
+   set the camera_Video [cRect] of cameraView to "Facetime"
    --
    if the shiftKey is "Up" then
       set the rect of stack sName to cRect
