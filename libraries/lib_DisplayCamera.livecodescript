@@ -52,13 +52,27 @@ setprop camera_Video [pRect] videoDeviceName
    return videoDeviceID
 end camera_Video
 
-setprop camera_Visible sBoolean
+getprop camera_IsVisible
+   put the camera_Property ["visible"] of the target into sBoolean
+   return sBoolean
+end camera_IsVisible
+
+setprop camera_IsVisible sBoolean
    set the camera_Property ["visible"] of the target to sBoolean
    return the result
-end camera_Visible
+end camera_IsVisible
+
+getprop camera_Property [propName]
+   put the camera_Name of the target into cameraName
+   if cameraName is empty then return "Error, no named camera:" && cameraName
+   --
+   put cameraControlGet (cameraName, propName) into propValue
+   return propValue
+end camera_Property
 
 setprop camera_Property [propName] propValue
    put the camera_Name of the target into cameraName
+   if cameraName is empty then return "Error, no named camera:" && cameraName
    --
    cameraControlSet cameraName, propName, propValue
    return the result
@@ -66,7 +80,8 @@ end camera_Property
 
 getprop camera_Name
    put the camera_DefaultName of the target into cameraName
-   if cameraName is among the lines of cameraControls() then
+   put camera_ListNames() into cameraNames
+   if cameraName is among the lines of cameraNames then
       return cameraName
    else
       return empty
@@ -80,7 +95,6 @@ getprop camera_DefaultName
    put the stack_Name of tObject into stackName
    put stackName && myID into cameraName
    --
-   cameraControlCreate cameraName
    return cameraName
 end camera_DefaultName
 
