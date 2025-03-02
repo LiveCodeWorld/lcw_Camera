@@ -302,7 +302,7 @@ command camera_CloseCloned
       put openCameraArray [sName]["cView"] into cView
       put openCameraArray [sName]["cName"] into cName
       --
-      set camera_Open of cView to false
+      set camera_IsOpen of cView to false
    end repeat
 end camera_CloseCloned
 
@@ -324,7 +324,7 @@ command camera_ReOpenAll cameraView
       put openCameraArray [sName]["cView"] into cView
       put openCameraArray [sName]["cName"] into cName
       --
-      set camera_Open of cView to true
+      set camera_IsOpen of cView to true
    end repeat
 end camera_ReOpenAll
 

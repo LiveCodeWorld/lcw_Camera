@@ -370,13 +370,13 @@ end _VideoDeviceIDFromName
 
 --> Camera | Open and Close
 -
-getprop camera_Open
+getprop camera_IsOpen
    put the camera_Name of me into cameraName
    put cameraControls() into cameraNames
    return cameraName is among the lines of cameraNames
-end camera_Open
+end camera_IsOpen
 
-setprop camera_Open [videoDeviceName] sBoolean
+setprop camera_IsOpen [videoDeviceName] sBoolean
    if sBoolean is true then
       if videoDeviceName is empty then
          put the uLCW ["video_DeviceName"] of me into videoDeviceName
@@ -392,7 +392,7 @@ setprop camera_Open [videoDeviceName] sBoolean
       _DeleteCamera
       return empty 
    end if
-end camera_Open
+end camera_IsOpen
 
 private command _OpenCamera cameraName, videoDeviceID
    put the rect of _graphicObject() into graphicRect

@@ -17,12 +17,12 @@ local LocalArray
 
 --> Working on
 -
-getprop camera_Open
+getprop camera_IsOpen
    put the camera_DefaultName of the target into cameraName
    --
    put cameraControls() into cameraNames
    return cameraName is among the lines of cameraNames
-end camera_Open
+end camera_IsOpen
 
 setprop camera_Video [pRect] videoDeviceName
    put the long id of the target into tObject
@@ -129,65 +129,6 @@ function search_FindViews viewGetProp, pStackNames
    return keys (searchData)
 end search_FindViews
 
-
---> Camera | Toggle
--
-command camera_ToggleLoaded
-   put camera_GetLoaded() into cameraViews
-   if cameraViews is empty then return false
-   --
-   put line 1 of cameraViews into testView
-   put the camera_Open of testView into isOpen
-   put isOpen is false into sBoolean
-   --
-   _ToggleCameras sBoolean, cameraViews
-   return the result
-end camera_ToggleLoaded
-
-command camera_OpenLoaded pCameraViews
-   if pCameraViews is empty then put camera_GetLoaded() into pCameraViews
-   ---
-   _ToggleCameras true, pCameraViews
-   return the result
-end camera_OpenLoaded
-
-command camera_CloseLoaded pCameraViews, pSearchWhat
-   if pCameraViews is empty then put camera_GetLoaded() into pCameraViews
-   ---
-   _ToggleCameras false, pCameraViews
-   return the result
-end camera_CloseLoaded
-
-
---> Camera | Load
--
-function camera_GetLoaded
-   put LocalArray ["goodCameraViews"] into goodCameraViews
-   if goodCameraViews is empty then
-      camera_SetLoaded
-   end if
-   return goodCameraViews
-end camera_GetLoaded
-
-command camera_SetLoaded pSearchWhat
-   put camera_FindViews (pSearchWhat) into pCameraViews
-   --
-   repeat for each line cameraView in pCameraViews
-      if exists (cameraView) is false then
-         put cameraView & CR after badCameraViews
-         next repeat
-      end if
-      put revRuggedID (cameraView) & CR after goodCameraViews
-   end repeat
-   delete char -1 of goodCameraViews
-   put goodCameraViews into LocalArray ["goodCameraViews"]
-   --
-   delete char -1 of badCameraViews
-   put badCameraViews into LocalArray ["badCameraViews"]
-   --
-   return goodCameraViews
-end camera_SetLoaded
-
 function camera_FindViews pSearchWhat
    switch pSearchWhat
       case "loaded"
@@ -206,16 +147,3 @@ end camera_FindViews
 
 --> Private
 -
-private command _ToggleCameras sBoolean, pCameraViews
-   set the cursor to watch
-   repeat for each line cameraView in pCameraViews
-      if exists (cameraView) is false then next repeat
-      --
-      set the camera_Open of cameraView to sBoolean
-      put cameraView & CR after goodCameraViews
-   end repeat
-   delete char -1 of goodCameraViews
-   --
-   put goodCameraViews into LocalArray ["goodCameraViews"]
-   return goodCameraViews
-end _ToggleCameras

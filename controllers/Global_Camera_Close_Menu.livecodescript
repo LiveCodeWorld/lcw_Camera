@@ -37,7 +37,7 @@ end menu_Target
 --> Global | Camera | Close | Menu
 -
 on menu_CloseCamera cameraView
-   set the camera_Open of cameraView to false
+   set the camera_IsOpen of cameraView to false
 end menu_CloseCamera
 
 getprop disabled_CloseCamera [cameraView]
