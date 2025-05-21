@@ -30,6 +30,70 @@ command camera_LoadAndSet cameraName, pVideoDeviceID, pAudioDeviceID
    cameraControlSet pCameraName, "videoDevice", videoDeviceID   
 end camera_LoadAndSet
 
+command camera_Clone pCloneName
+   put "View|Camera" into stackNameToClone
+   if exists (stack stackNameToClone) is false then return empty
+   
+   # Clone Invisible
+   set lockmessages to true -- otherwise issue with timing and camera-Name nto correct
+   stack_CloneInvisible stackNameToClone, pCloneName
+   put the result into cloneStackName
+   set lockmessages to false
+   --
+   put the camera_View of stack cloneStackName into cameraView
+   put the camera_Name of cameraView into cameraName
+   dispatch "camera_Init" to cameraView with cameraName
+   --
+   stack_SetToMainScreen cloneStackName
+   set the visible of stack cloneStackName to true
+   --
+   put the name of stack cloneStackName into clonedStack
+   return clonedStack
+end camera_Clone
+
+
+--> Camera | Close
+-
+function camera_Exists cameraName
+   if cameraName is empty then return false
+   --
+   put cameraControls() into cameraNames
+   return cameraName is among the lines of cameraNames
+end camera_Exists
+
+command camera_Delete cameraName
+   if camera_Exists (cameraName) is false then
+      return "Error, camera does not exist:" && cameraName
+   end if
+   
+   -- send "cameraControlDelete cameraName" to cameraView in 2 ticks
+   cameraControlDelete cameraName
+   put the result into sResult
+   return sResult
+end camera_Delete
+
+command camera_CloseAll pCameraNames
+   if pCameraNames is empty then
+      put cameraControls() into pCameraNames
+   end if
+   repeat for each line cameraName in pCameraNames
+      cameraControlDelete cameraName
+   end repeat
+   -- delete variable LocalArray
+end camera_CloseAll
+
+command camera_CloseCloned
+   breakpoint
+   put camera_ConstructStackNameArray() into cameraStackNameArray
+   put cameraStackNameArray ["open"] into openCameraArray
+   repeat for each key sName in openCameraArray
+      put openCameraArray [sName]["cView"] into cView
+      put openCameraArray [sName]["cName"] into cName
+      --
+      set camera_IsOpen of cView to false
+   end repeat
+end camera_CloseCloned
+
 
 --> Props
 -
@@ -282,32 +346,7 @@ command camera_StopRecording cameraView
 end camera_StopRecording
 
 
---> Camera | Open
--
-command camera_CloseAll pCameraNames
-   if pCameraNames is empty then
-      put cameraControls() into pCameraNames
-   end if
-   repeat for each line cameraName in pCameraNames
-      cameraControlDelete cameraName
-   end repeat
-   -- delete variable LocalArray
-end camera_CloseAll
-
-command camera_CloseCloned
-   breakpoint
-   put camera_ConstructStackNameArray() into cameraStackNameArray
-   put cameraStackNameArray ["open"] into openCameraArray
-   repeat for each key sName in openCameraArray
-      put openCameraArray [sName]["cView"] into cView
-      put openCameraArray [sName]["cName"] into cName
-      --
-      set camera_IsOpen of cView to false
-   end repeat
-end camera_CloseCloned
-
-
---> Camera | Close
+--> Camera | Recordings
 -
 command camera_RevealRecording cameraView
    put the camera_Name of cameraView into cameraName

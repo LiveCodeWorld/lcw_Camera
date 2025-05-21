@@ -21,22 +21,68 @@ local LocalArray
 
 --> Working on
 -
--- getprop menubar_View
-   put the menubar_View of me into mGroup
-   if exists (mGroup) is false then return empty
-   return mGroup
-end menubar_View
+getprop new_VideoDeviceName
+   put _NewRandomVideoDeviceName() into newName
+   return newName
+end new_VideoDeviceName
 
--- setprop menubar_View mGroup
-   if exists (mGroup) is false then return empty
-   set the menubar_View of me to mGroup
-end menubar_View
+getprop new_VideoDeviceId
+   return _NewRandomVideoDeviceId()
+end new_VideoDeviceId
+
+
+--> Events | Camera
+-
+on camera_Delete
+   put the camera_Name of me into cameraName
+   cameraControlDelete cameraName
+   return cameraName
+end camera_Delete
+
+on camera_Init pCameraName
+   if pCameraName is empty then put the camera_Name of me into pCameraName
+   
+   # Open and load arrays
+   cameraControlCreate pCameraName
+   camera_InitLoad pCameraName
+   put the result into videoDeviceArray
+   
+   put _NewRandomVideoDeviceId() into videoDeviceID
+   camera_InitVideo pCameraName, videoDeviceID
+   return videoDeviceArray
+end camera_Init
+
+on camera_InitVideo pCameraName, pVideoDeviceID
+   # Default video device
+   if pVideoDeviceID is empty then
+      put _DefaultVideoDeviceID() into pVideoDeviceID
+   end if
+   
+   # Display
+   cameraControlSet pCameraName, "videoDevice", pVideoDeviceID
+   _OpenCamera pCameraName, pVideoDeviceID
+   --
+   return pVideoDeviceID
+end camera_InitVideo
+
+on camera_InitLoad pCameraName
+   if pCameraName is empty then put the camera_Name of me into pCameraName
+   
+   # Load VideoDeviceArray
+   _LoadVideoDeviceArray
+   put the result into videoDeviceArray
+   
+   # Load AudioDeviceArray
+   _LoadAudioDeviceArray pCameraName
+   --
+   return videoDeviceArray
+end camera_InitLoad
 
 
 --> Events
 -
 on mouseUp
-   set the camera_Rect of me to the rect of me
+   -- set the camera_Rect of me to the rect of me
 end mouseUp
 
 on mouseDown pButtonNum
@@ -58,28 +104,6 @@ on preOpenControl
    camera_Init cameraName
    pass preOpenControl
 end preOpenControl
-
-on camera_Init pCameraName
-   if pCameraName is empty then
-      put the camera_Name of me into pCameraName
-   end if
-   
-   ## Open
-   cameraControlCreate pCameraName
-   
-   ## Load VideoDeviceArray
-   _LoadVideoDeviceArray
-   put the result into videoDeviceArray
-   
-   ## Load AudioDeviceArray
-   _LoadAudioDeviceArray pCameraName
-   
-   ## Default video device
-   put _DefaultVideoDeviceID (videoDeviceArray) into videoDeviceID
-   cameraControlSet pCameraName, "videoDevice", videoDeviceID
-   --
-   return videoDeviceArray
-end camera_Init
 
 on resizeControl   
    put the rect of me into viewRect
@@ -128,8 +152,8 @@ end menu_IsGlobal
 
 getprop menu_BarName
    if exists (the menubar_View of me) is false then return empty
-   put the stack_Name of me into sName
-   return the menubar of stack sName
+   put the short name of the defaultstack into stackName
+   return the menubar of stack stackName
 end menu_BarName
 
 setprop menu_IsActive sBoolean   
@@ -137,7 +161,7 @@ setprop menu_IsActive sBoolean
    if exists (mGroup) is false then return empty
    
    # Props
-   put the stack_Name of me into sName 
+   put the short name of the defaultstack into sName
    put the menu_IsGlobal of me into isGlobal
    
    # Set
@@ -260,7 +284,7 @@ end camera_Rect
 -
 getprop camera_Name
    put the short id of me into myID
-   put the stack_Name of me into stackName
+   put the short name of the defaultstack into stackName
    return stackName && myID
 end camera_Name
 
@@ -287,7 +311,7 @@ setprop video_DeviceName videoDeviceName
          _OpenCamera cameraName, videoDeviceID
          return videoDeviceID
       case empty
-         _DeleteCamera
+         camera_Delete
          put the result into oldCameraName
          return oldCameraName
       default
@@ -389,7 +413,7 @@ setprop camera_IsOpen [videoDeviceName] sBoolean
       _OpenCamera cameraName, videoDeviceID
       return videoDeviceID
    else
-      _DeleteCamera
+      camera_Delete
       return empty 
    end if
 end camera_IsOpen
@@ -404,15 +428,40 @@ private command _OpenCamera cameraName, videoDeviceID
    return graphicRect
 end _OpenCamera
 
-private command _DeleteCamera
-   put the camera_Name of me into cameraName
-   cameraControlDelete cameraName
-   return cameraName
-end _DeleteCamera
-
 
 --> Load
 -
+private function _NewRandomVideoDeviceId pVideoDeviceArray
+   if pVideoDeviceArray is not an array then
+      put _VideoDeviceArray() into pVideoDeviceArray
+   end if
+   put pVideoDeviceArray ["name"] into nameArray
+   --
+   put _NewRandomVideoDeviceName (pVideoDeviceArray) into newName
+   put nameArray [newName] into videoDeviceID
+   --
+   return videoDeviceID
+end _NewRandomVideoDeviceId
+   
+private function _NewRandomVideoDeviceName pVideoDeviceArray
+   if pVideoDeviceArray is not an array then
+      put _VideoDeviceArray() into pVideoDeviceArray
+   end if
+   put pVideoDeviceArray ["name"] into nameArray
+   
+   put cameraControls() into cameraNames
+   repeat for each line cameraName in cameraNames
+      put cameraControlGet (cameraName, "videoDevice") into vDeviceID
+      put _VideoDeviceName (vDeviceID) into vName
+      --
+      delete variable nameArray [vName]
+   end repeat
+   
+   put the keys of nameArray into newNames
+   put any line of newNames into newName
+   return newName
+end _NewRandomVideoDeviceName
+
 private function _DefaultVideoDeviceID pVideoDeviceArray
    if pVideoDeviceArray is not an array then
       put _VideoDeviceArray() into pVideoDeviceArray
@@ -474,7 +523,7 @@ end camera_AudioDeviceArray
 --> Frame
 -
 getprop stack_Frame
-   put the stack_Name of me into stackName
+   put the short name of the defaultstack into stackName
    --
    put the decorations of stack stackName is empty into isFrameless
    put the mode of stack stackName into sMode
@@ -490,7 +539,7 @@ getprop stack_Frame
 end stack_Frame
 
 setprop stack_Frame frameStyle
-   put the stack_Name of me into stackName
+   put the short name of the defaultstack into stackName
    --
    switch frameStyle
       case false
@@ -512,13 +561,13 @@ setprop stack_Frame frameStyle
 end stack_Frame
 
 getprop system_Window
-   put the stack_Name of me into stackName
+   put the short name of the defaultstack into stackName
    put the systemwindow of stack stackName into someBoolean
    return someBoolean
 end system_Window
 
 setprop system_Window someBoolean
-   put the stack_Name of me into stackName
+   put the short name of the defaultstack into stackName
    set the systemwindow of stack stackName to someBoolean
    return someBoolean
 end system_Window
